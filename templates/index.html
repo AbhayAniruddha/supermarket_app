@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <table class="table">
+        <thead id="tbody">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Brand</th>
+            <th scope="col">Out_of_Stock</th>
+            <th scope="col">Product_Description</th>
+            <th scope="col">Product_ID</th>
+            <th scope="col">Product_Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+        </tbody>
+      </table>
+    <script>
+        async function fetchData() {
+            try {
+                const response = await fetch("http://127.0.0.1:5000/data");
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const jsonData = await response.json();
+                console.log(JSON.parse(jsonData[0])[0]);
+                const tbody  = document.getElementById("tbody")
+                JSON.parse(jsonData[0]).map((item,idx)=>{
+                    console.log(item)
+                    tbody.innerHTML+=`<tr> 
+                        <th scope="row">${idx}</th>
+                        <td>${item.Brand}</td>
+                        <td>${item.Out_of_Stock}</td>
+                        <td>${item.Product_Description}</td>
+                        <td>${item.Product_ID}</td>
+                        <td>${item.Product_Name}</td>
+                        </tr>`
+                })
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+            }
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
