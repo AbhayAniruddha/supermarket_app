@@ -6,7 +6,7 @@ app = Flask(__name__)
 CORS(app)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'kannankichu309*'
+app.config['MYSQL_PASSWORD'] = 'Sudeep12!@'
 app.config['MYSQL_DB'] = 'supermarket'
 mysql = MySQL(app)
 
@@ -179,6 +179,56 @@ def add_cart_item():
         return jsonify({'error': str(e)}), 500
     finally:
         cur.close()
+
+@app.route('/get_previous_orders', methods=['POST'])
+def get_previous_orders():
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        print(user_id)
+
+        cur = mysql.connection.cursor()
+        cur.execute('''
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'Order_ID', po.id,
+                    'Total', po.Total,
+                    'Shipping_Address_Id', po.Shipping_Address_Id,
+                    'Status', po.Status,
+                    'Creation_Date', po.Creation_Date,
+                    'Modified_Date', po.Modified_Date,
+                    'Items', (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'Product_Name', p.Name,
+                                'Product_Description', p.Description,
+                                'Quantity', oi.Quantity,
+                                'Price', pi.Price
+                            )
+                        )
+                        FROM Order_Item oi
+                        INNER JOIN Product p ON p.id = oi.Linked_Product_Id
+                        INNER JOIN Product_Inventory pi ON pi.Linked_Product_Id = oi.Linked_Product_Id
+                        WHERE oi.Linked_Order_Id = po.id
+                    )
+                )
+            ) AS Orders
+            FROM PreviousOrder po
+            WHERE po.User_Id = %s
+        ''', (user_id,))
+        
+        orders_data = cur.fetchall()
+        cur.close()
+
+        if not orders_data:
+            return jsonify({'message': 'No previous orders found'}), 404
+
+        return jsonify(orders_data[0])
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 
 
 if __name__ == '__main__':
