@@ -227,6 +227,73 @@ def get_previous_orders():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/move_to_previous_order', methods=['POST'])
+def move_to_previous_order():
+    data = request.json
+    user_id = data.get('user_id')
+    address_id = data.get('address_id')  # Assuming address_id is sent from the frontend
+    cur = mysql.connection.cursor()
+
+    try:
+        # Move cart items to a new previous order
+        cur.execute('''
+            INSERT INTO PreviousOrder (Total, Shipping_Address_Id, Status, User_Id)
+            VALUES (
+                (SELECT SUM(pi.Price * ci.Quantity)
+                FROM Cart_Item ci
+                INNER JOIN Cart_Session cs ON ci.Linked_Cart_Session_Id = cs.id
+                INNER JOIN Product_Inventory pi ON ci.Linked_Product_Id = pi.Linked_Product_Id
+                WHERE cs.User_Id = %s),
+                %s, 1, %s
+            )
+        ''', (user_id, address_id, user_id))
+
+        # Get the ID of the newly inserted previous order
+        cur.execute('SELECT LAST_INSERT_ID()')
+        order_id = cur.fetchone()[0]
+
+        # Move cart items to order items with the newly created order ID
+        cur.execute('''
+            INSERT INTO Order_Item (Quantity, Linked_Product_Id, Linked_Order_Id)
+            SELECT ci.Quantity, ci.Linked_Product_Id, %s
+            FROM Cart_Item ci
+            INNER JOIN Cart_Session cs ON ci.Linked_Cart_Session_Id = cs.id
+            WHERE cs.User_Id = %s
+        ''', (order_id, user_id))
+
+        # Decrease quantity in product inventory
+        cur.execute('''
+            UPDATE Product_Inventory pi
+            INNER JOIN Cart_Item ci ON ci.Linked_Product_Id = pi.Linked_Product_Id
+            INNER JOIN Cart_Session cs ON ci.Linked_Cart_Session_Id = cs.id
+            SET pi.Quantity = pi.Quantity - ci.Quantity
+            WHERE cs.User_Id = %s
+        ''', (user_id,))
+
+        # Delete cart items
+        cur.execute('''
+            DELETE FROM Cart_Item
+            WHERE Linked_Cart_Session_Id IN (
+                SELECT id FROM Cart_Session WHERE User_Id = %s
+            )
+        ''', (user_id,))
+
+        # Delete cart session
+        cur.execute('''
+            DELETE FROM Cart_Session
+            WHERE User_Id = %s
+        ''', (user_id,))
+
+        mysql.connection.commit()
+        return jsonify({'message': 'Cart items moved to previous order successfully'})
+    except Exception as e:
+        mysql.connection.rollback()
+        return jsonify({'error': str(e)})
+    finally:
+        cur.close()
+
+
 
 
 
