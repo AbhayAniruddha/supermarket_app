@@ -294,6 +294,60 @@ def move_to_previous_order():
         cur.close()
 
 
+@app.route('/profile/get' , methods=['POST'])
+def get_profile_info():
+    data = request.json
+    id = data.get('email')
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'First_Name', u.First_Name,
+                'Last_Name', u.Last_Name,
+                'Mobile', u.Mobile
+            )
+        ) AS INFO
+        FROM User u
+        WHERE u.id = %s  
+    ''',(id,))
+    data = cur.fetchall()
+    cur.close()
+    return jsonify(data[0])
+
+@app.route('/address/get' , methods=['POST'])
+def get_address():
+    data = request.json
+    id = data.get('email')
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'address_id', u.id,
+                'address', u.Address,
+                'postal_code', u.Postal_Code
+            )
+        ) AS ADDRESS
+        FROM User_Address u
+        WHERE u.User_Id = %s  
+    ''',(id,))
+    data = cur.fetchall()
+    cur.close()
+    return jsonify(data[0])
+
+@app.route('/address/update' , methods=['POST'])
+def update_address():
+    data = request.json
+    id = data.get('email')
+    address = data.get('address')
+    postal_code = data.get('postal_code')
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        INSERT INTO User_Address(Address,Postal_Code,User_Id) 
+        VALUES (%s, %s, %s)
+    ''',(address,postal_code,id))
+    mysql.connection.commit()
+    cur.close()
+    return jsonify({'message': 'Address added successfully'}), 200
 
 
 
