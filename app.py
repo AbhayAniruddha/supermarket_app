@@ -37,13 +37,14 @@ def add_user():
     firstname = data.get('firstname')
     id = data.get('email')
     lastname = data.get('lastname')
-    print(id,firstname,lastname)
+    mobile = data.get('mobile')
+
 
     cur = mysql.connection.cursor()
     cur.execute('''
-        INSERT INTO User (id, First_Name, Last_Name)
-        VALUES (%s, %s, %s)
-    ''', (id,firstname,lastname))
+        INSERT INTO User (id, First_Name, Last_Name, Mobile)
+        VALUES (%s, %s, %s, %s)
+    ''', (id,firstname,lastname,mobile))
     mysql.connection.commit()
     cur.close()
 
