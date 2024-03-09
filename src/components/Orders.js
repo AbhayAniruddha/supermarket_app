@@ -38,8 +38,32 @@ export default function Orders() {
         
         getOrders();
         console.log(orders)
+    
     }, [user]); // Fetch orders whenever 'user' changes
+    const moveToCart = async (e,orderId) => {
+        
+        e.preventDefault()
+        console.log(orderId)
+        try {
+            // Prepare the request
+            const response = await fetch('http://127.0.0.1:5000/move_to_cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: user.email, order_id: orderId })
+            });
 
+            if (response.ok) {
+                console.log('Items moved to cart successfully');
+                // Optionally, you can update the UI to reflect changes
+            } else {
+                console.error('Failed to move items to cart:', response.status);
+            }
+        } catch (error) {
+            console.error('Error moving items to cart:', error);
+        }
+    };
     return (
         <>
             <Header />
@@ -73,13 +97,13 @@ export default function Orders() {
                         ))}
                     </div>
 
-                    <div className="mt-12 text-center">
-                        <a
-                            href="#"
-                            className="inline-block rounded bg-pink-600 px-12 py-3 text-sm font-medium text-white transition hover:bg-pink-700 focus:outline-none focus:ring focus:ring-yellow-400"
-                        >
-                            Move to Cart
-                        </a>
+                    <div className="mt-4">
+                                    <button
+                                        className="inline-block rounded bg-pink-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-700 focus:outline-none focus:ring focus:ring-yellow-400"
+                                        onClick={(e) => moveToCart(e,orders[0].Order_ID)}
+                                    >
+                                        Move to Cart
+                                    </button>
                     </div>
                 </div>
             </section>
