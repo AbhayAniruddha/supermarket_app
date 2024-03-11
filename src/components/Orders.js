@@ -45,34 +45,42 @@ export default function Orders() {
         console.log(orders)
     
     }, [user]); // Fetch orders whenever 'user' changes
-    const moveToCart = async (e,orderId) => {
+    const moveToCart = async (e) => {
         
         e.preventDefault()
-        console.log(orderId)
-        try {
-            // Prepare the request
-            const response = await fetch('http://127.0.0.1:5000/move_to_cart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ user_id: user.email, order_id: orderId })
-            });
-
-            if (response.ok) {
-                alert('Items moved to cart successfully');
-                // Optionally, you can update the UI to reflect changes
-            } else {
-                console.error('Failed to move items to cart:', response.status);
+        //console.log(orderId)
+        if(selectedOrder !== null)
+        {
+            const orderId = orders[selectedOrder - 1].Order_ID
+            try {
+                // Prepare the request
+                const response = await fetch('http://127.0.0.1:5000/move_to_cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: user.email, order_id: orderId })
+                });
+    
+                if (response.ok) {
+                    alert('Items moved to cart successfully');
+                    // Optionally, you can update the UI to reflect changes
+                } else {
+                    console.error('Failed to move items to cart:', response.status);
+                }
+            } catch (error) {
+                console.error('Error moving items to cart:', error);
             }
-        } catch (error) {
-            console.error('Error moving items to cart:', error);
         }
+        else{
+            alert("Please select an order to move to cart")
+        }
+        
     };
     return (
         <>
             <Header />
-            <section className="bg-gray-900 text-white min-h-screen">
+            <section className="bg-grey-900 text-white min-h-screen">
                 <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
                     <div className="mx-auto max-w-lg text-center">
                         <h2 className="text-3xl font-bold sm:text-4xl">Order List</h2>
@@ -109,7 +117,7 @@ export default function Orders() {
                     <div className="mt-4">
                                     <button
                                         className="inline-block rounded bg-pink-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-700 focus:outline-none focus:ring focus:ring-yellow-400"
-                                        onClick={(e) => moveToCart(e,orders[selectedOrder-1].Order_ID)}
+                                        onClick={(e) => moveToCart(e)}
                                     >
                                         Move to Cart
                                     </button>
