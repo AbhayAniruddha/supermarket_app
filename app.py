@@ -355,6 +355,44 @@ def update_address():
     cur.close()
     return jsonify({'message': 'Address added successfully'}), 200
 
+@app.route('/move_to_cart', methods=['POST'])
+def move_to_cart():
+    data = request.json
+    order_id = data.get('order_id')
+    user_id = data.get('user_id')  # Assuming user_id is sent from the frontend
+    cur = mysql.connection.cursor()
+
+    try:
+        # Check if a cart session already exists for the user
+        cur.execute('''
+            SELECT id FROM Cart_Session WHERE User_Id = %s
+        ''', (user_id,))
+        existing_cart_session = cur.fetchone()
+        
+        if existing_cart_session:
+            cart_session_id = existing_cart_session[0]
+        else:
+            # Create a new cart session for the user if one doesn't exist
+            cur.execute('''
+                INSERT INTO Cart_Session (User_Id) VALUES (%s)
+            ''', (user_id,))
+            cart_session_id = cur.lastrowid
+
+        # Move order items to the cart session
+        cur.execute('''
+            INSERT INTO Cart_Item (Quantity, Linked_Product_Id, Linked_Cart_Session_Id)
+            SELECT oi.Quantity, oi.Linked_Product_Id, %s
+            FROM Order_Item oi
+            WHERE oi.Linked_Order_Id = %s
+        ''', (cart_session_id, order_id))
+
+        mysql.connection.commit()
+        return jsonify({'message': 'Items from previous order added to cart successfully'})
+    except Exception as e:
+        mysql.connection.rollback()
+        return jsonify({'error': str(e)})
+    finally:
+        cur.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
