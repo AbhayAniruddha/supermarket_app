@@ -108,12 +108,15 @@ def get_cart_items():
                 'Product_Name', p.Name,
                 'Product_Description', p.Description,
                 'Quantity', ci.Quantity,
-                'Price', pi.Price
+                'Price', pi.Price,
+                'MaxQuantity', pi.Quantity,
+                'Product_Image', pimg.Image
             )
         ) AS Products
         FROM Cart_Item ci
         INNER JOIN Cart_Session cs ON cs.id = ci.Linked_Cart_Session_Id
         INNER JOIN Product p ON p.id = ci.Linked_Product_Id  
+        INNER JOIN Product_Images pimg ON pimg.Linked_Product_Id = ci.Linked_Product_Id
         INNER JOIN Product_Inventory pi ON pi.Linked_Product_Id = ci.Linked_Product_Id
         WHERE cs.User_Id = %s  
     ''',(id,))
@@ -237,6 +240,7 @@ def move_to_previous_order():
     cur = mysql.connection.cursor()
 
     try:
+
         # Move cart items to a new previous order
         cur.execute('''
             INSERT INTO PreviousOrder (Total, Shipping_Address_Id, Status, User_Id)
@@ -253,6 +257,7 @@ def move_to_previous_order():
         # Get the ID of the newly inserted previous order
         cur.execute('SELECT LAST_INSERT_ID()')
         order_id = cur.fetchone()[0]
+
 
         # Move cart items to order items with the newly created order ID
         cur.execute('''
@@ -271,7 +276,7 @@ def move_to_previous_order():
             SET pi.Quantity = pi.Quantity - ci.Quantity
             WHERE cs.User_Id = %s
         ''', (user_id,))
-
+        
         # Delete cart items
         cur.execute('''
             DELETE FROM Cart_Item
@@ -349,8 +354,6 @@ def update_address():
     mysql.connection.commit()
     cur.close()
     return jsonify({'message': 'Address added successfully'}), 200
-
-
 
 
 if __name__ == '__main__':
