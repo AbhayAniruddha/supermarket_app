@@ -7,7 +7,12 @@ export default function Orders() {
     const [orders, setOrders] = useState(null);
     console.log(orders)
     const [user, loading, error] = useAuthState(auth);
-    
+    const [selectedOrder, setSelectedOrder] = useState(null);
+
+    const selectOrder = (orderIndex) => {
+        console.log(orderIndex)
+        setSelectedOrder(orderIndex);
+    }
     useEffect(() => {
         const getOrders = async () => {
             if (!user) return; // Ensure user is authenticated before fetching orders
@@ -55,7 +60,7 @@ export default function Orders() {
             });
 
             if (response.ok) {
-                console.log('Items moved to cart successfully');
+                alert('Items moved to cart successfully');
                 // Optionally, you can update the UI to reflect changes
             } else {
                 console.error('Failed to move items to cart:', response.status);
@@ -75,7 +80,11 @@ export default function Orders() {
 
                     <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                         {orders && orders.map(order => (
-                            <div key={order.Order_ID} className="block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10">
+                            <div key={order.Order_ID} 
+                            onClick={() => selectOrder(order.Order_ID)}
+                            className={`block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10${
+                                selectedOrder === order.Order_ID ? 'hover:border-blue-500/10 hover:shadow-blue-500/10' : '' 
+                            }`}>
                                 <h2 className="mt-4 text-xl font-bold text-white">Order ID: {order.Order_ID}</h2>
                                 <p className="mt-1 text-sm text-gray-300">Total: ${order.Total}</p>
                                 <p className="mt-1 text-sm text-gray-300">Status: {order.Status}</p>
@@ -100,7 +109,7 @@ export default function Orders() {
                     <div className="mt-4">
                                     <button
                                         className="inline-block rounded bg-pink-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-700 focus:outline-none focus:ring focus:ring-yellow-400"
-                                        onClick={(e) => moveToCart(e,orders[0].Order_ID)}
+                                        onClick={(e) => moveToCart(e,orders[selectedOrder-1].Order_ID)}
                                     >
                                         Move to Cart
                                     </button>
