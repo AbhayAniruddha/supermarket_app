@@ -31,6 +31,237 @@ def get_category():
     cur.close()
     return jsonify(data[0])
 
+@app.route('/add_category', methods=['POST'])
+def add_category():
+    data = request.json
+    displaytext = data.get('displaytext')
+    desc = data.get('desc')
+    
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        INSERT INTO Category (Display_Text, Description)
+        VALUES (%s, %s)
+    ''', (displaytext,desc))
+    mysql.connection.commit()
+    cur.close()
+
+    return jsonify({'message': 'Category added successfully'})
+
+@app.route('/delete_category', methods=['POST'])
+def delete_category():
+    data = request.json
+    id = data.get('id')
+    
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        DELETE FROM Category WHERE id = %s
+    ''', (id,))
+    mysql.connection.commit()
+    cur.close()
+
+    return jsonify({'message': 'Category deleted succesfully'})
+
+
+
+@app.route('/brands', methods=['GET'])
+def get_brand():
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'Brand_ID', id,
+                'Brand', Name
+            )
+        ) AS Brands
+        FROM Brand
+    ''')
+    data = cur.fetchall()
+    cur.close()
+    return jsonify(data[0])
+
+@app.route('/add_brand', methods=['POST'])
+def add_brand():
+    data = request.json
+    brand = data.get('brand')
+    
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        INSERT INTO Brand (Name)
+        VALUES (%s)
+    ''', (brand,))
+    mysql.connection.commit()
+    cur.close()
+
+    return jsonify({'message': 'Brand added successfully'})
+
+@app.route('/delete_brand', methods=['POST'])
+def delete_brand():
+    data = request.json
+    id = data.get('id')
+    
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        DELETE FROM Brand WHERE id = %s
+    ''', (id,))
+    mysql.connection.commit()
+    cur.close()
+
+    return jsonify({'message': 'Brand deleted succesfully'})
+
+
+@app.route('/vendors', methods=['GET'])
+def get_vendor():
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'Vendor_ID', id,
+                'Vendor', Name,
+                'Vendor_Email', Email,
+                'Vendor_Phone', Phone_Number,
+                'Vendor_Website', Website_URL
+            )
+        ) AS Vendors
+        FROM Vendor
+    ''')
+    data = cur.fetchall()
+    cur.close()
+    return jsonify(data[0])
+
+@app.route('/add_vendor', methods=['POST'])
+def add_vendor():
+    data = request.json
+    name = data.get('name')
+    email = data.get('email')
+    phone = data.get('phone')
+    web = data.get('web')
+    
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        INSERT INTO Vendor (Name, Email, Phone_Number, Website_URL)
+        VALUES (%s, %s, %s, %s)
+    ''', (name, email, phone, web))
+    mysql.connection.commit()
+    cur.close()
+
+    return jsonify({'message': 'Vendor added successfully'})
+
+@app.route('/delete_vendor', methods=['POST'])
+def delete_vendor():
+    data = request.json
+    id = data.get('id')
+    
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        DELETE FROM Vendor WHERE id = %s
+    ''', (id,))
+    mysql.connection.commit()
+    cur.close()
+
+    return jsonify({'message': 'Vendor deleted succesfully'})
+
+
+@app.route('/products', methods=['GET'])
+def get_product():
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'Product_Id', p.id,
+                'Product_Name', p.Name,
+                'Product_Description', p.Description,
+                'Product_Stock', p.Out_of_Stock,
+                'Product_Price', pii.Price,
+                'Product_Quantity', pii.Quantity,
+                'Product_Image', pi.Image,
+                'Product_Alt', pi.ALT
+            )
+        ) AS Products
+        FROM Product p
+        INNER JOIN Category c ON p.Categories_Id = c.id
+        INNER JOIN Product_Images pi ON p.id = pi.Linked_Product_Id
+        INNER JOIN Product_Inventory pii ON p.id = pii.Linked_Product_Id
+    ''')
+    data = cur.fetchall()
+    cur.close()
+    return jsonify(data[0])
+
+@app.route('/add_product', methods=['POST'])
+def add_product():
+    data = request.json
+    name = data.get('p_name')
+    desc = data.get('p_desc')
+    price = data.get('price')
+    quantity = data.get('quantity')
+    image = data.get('image')
+    alt = data.get('alt')
+    brand_id = data.get('brand_id')
+    category_id = data.get('category_id')
+    vendor_id = data.get('vendor_id')
+    
+    cur = mysql.connection.cursor()
+    # Insert into Product table
+    cur.execute('''
+        INSERT INTO Product (Name, Description, Out_of_Stock, Categories_Id, Brand_Id)
+        VALUES (%s, %s, %s, %s, %s)
+    ''', (name, desc, 0, category_id, brand_id))
+    product_id = cur.lastrowid
+    
+    # Insert into Product_Inventory table
+    cur.execute('''
+        INSERT INTO Product_Inventory (Linked_Product_Id, Linked_Vendor_Id, Price, Quantity)
+        VALUES (%s, %s, %s, %s)
+    ''', (product_id, vendor_id, price, quantity))
+    
+    # Insert into Product_Images table
+    cur.execute('''
+        INSERT INTO Product_Images (Image, ALT, Linked_Product_Id)
+        VALUES (%s, %s, %s)
+    ''', (image, alt, product_id))
+    
+    mysql.connection.commit()
+    cur.close()
+
+    return jsonify({'message': 'Product added successfully'})
+
+   
+
+@app.route('/delete_product', methods=['POST'])
+def delete_product():
+    data = request.json
+    id = data.get('id')
+    
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Delete the image
+        cur.execute('''
+            DELETE FROM Product_Images WHERE Linked_Product_Id = %s
+        ''', (id,))
+
+        # Delete the inventory record
+        cur.execute('''
+            DELETE FROM Product_Inventory WHERE Linked_Product_Id = %s
+        ''', (id,))
+
+        # Delete the product
+        cur.execute('''
+            DELETE FROM Product WHERE id = %s
+        ''', (id,))
+        
+        
+        mysql.connection.commit()
+        cur.close()
+
+        return jsonify({'message': 'Product, inventory, and image deleted successfully'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+
+
+
+
 @app.route('/add_user', methods=['POST'])
 def add_user():
     data = request.json
@@ -52,7 +283,7 @@ def add_user():
 
 
 @app.route('/products/<string:category>')
-def get_product(category):
+def get_product_by_category(category):
     cur = mysql.connection.cursor()
     cur.execute('''
         SELECT JSON_ARRAYAGG(
@@ -77,6 +308,8 @@ def get_product(category):
     cur.close()
     return jsonify(data[0])
 
+
+
 @app.route('/cart/update' , methods=['POST'])
 def update_cart():
     data = request.json
@@ -95,7 +328,6 @@ def update_cart():
     mysql.connection.commit()
     cur.close()
     return jsonify({'message': 'Product price updated successfully'}), 200
-
 
 @app.route('/cart/get' , methods=['POST'])
 def get_cart_items():
@@ -184,6 +416,7 @@ def add_cart_item():
     finally:
         cur.close()
 
+
 @app.route('/get_previous_orders', methods=['POST'])
 def get_previous_orders():
     try:
@@ -232,6 +465,8 @@ def get_previous_orders():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+
+
 @app.route('/move_to_previous_order', methods=['POST'])
 def move_to_previous_order():
     data = request.json
@@ -300,6 +535,7 @@ def move_to_previous_order():
         cur.close()
 
 
+
 @app.route('/profile/get' , methods=['POST'])
 def get_profile_info():
     data = request.json
@@ -319,6 +555,8 @@ def get_profile_info():
     data = cur.fetchall()
     cur.close()
     return jsonify(data[0])
+
+
 
 @app.route('/address/get' , methods=['POST'])
 def get_address():
