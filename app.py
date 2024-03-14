@@ -258,6 +258,29 @@ def delete_product():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+@app.route('/update_product_quantity', methods=['POST'])
+def update_product_quantity():
+    data = request.json
+    id = data.get('id')
+    quantity = data.get('quantity')
+    
+    try:
+        cur = mysql.connection.cursor()
+
+        # Update the product
+        cur.execute('''
+            UPDATE Product_Inventory SET quantity = %s WHERE id = %s
+        ''', (quantity,id))
+        
+        
+        mysql.connection.commit()
+        cur.close()
+
+        return jsonify({'message': 'Product updated successfully'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 
 
 
