@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { auth } from '../firebase/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Header from "./common/Header";
+import OrderDetailsModal from "./OrderDetailsModal";
 
 export default function Orders() {
     const [orders, setOrders] = useState(null);
-    console.log(orders)
     const [user, loading, error] = useAuthState(auth);
-    const [selectedOrder, setSelectedOrder] = useState(null);
-
+    const [selectedOrder, setSelectedOrder] = useState(null); // State to track selected order
+    const [selectedOrderDetails, setSelectedOrderDetails] = useState(null); // State to track selected order
+    
     const selectOrder = (orderIndex) => {
-        console.log(orderIndex)
+        //console.log(orderIndex)
         setSelectedOrder(orderIndex);
     }
     useEffect(() => {
@@ -42,9 +43,18 @@ export default function Orders() {
         };
         
         getOrders();
-        console.log(orders)
-    
     }, [user]); // Fetch orders whenever 'user' changes
+
+    // Function to handle clicking on "Show Details" button
+    const showDetails = (orderId) => {
+        setSelectedOrderDetails(orderId); // Set the selected order ID
+    };
+
+    // Function to close the modal
+    const closeModal = () => {
+        setSelectedOrderDetails(null);
+    };
+
     const moveToCart = async (e) => {
         
         e.preventDefault()
@@ -77,6 +87,7 @@ export default function Orders() {
         }
         
     };
+
     return (
         <>
             <Header />
@@ -90,30 +101,23 @@ export default function Orders() {
                         {orders && orders.map(order => (
                             <div key={order.Order_ID} 
                             onClick={() => selectOrder(order.Order_ID)}
-                            className={`block rounded-xl border border-gray-200 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-teal-600/30${
-                                selectedOrder === order.Order_ID ? 'hover:border-blue-500/10 hover:shadow-blue-500/10' : '' 
+                            className={`block rounded-xl border-4 border-gray-200 p-8 shadow-xl transition hover:border-teal-500/10 hover:shadow-teal-600/30${
+                                selectedOrder === order.Order_ID ? 'border-4 border-blue-800 hover:border-blue-600 hover:shadow-blue-700/10' : '' 
                             }`}>
                                 <h2 className="mt-4 text-xl font-bold text-black">Order ID: {order.Order_ID}</h2>
                                 <p className="mt-1 text-sm text-gray-800">Total: ${order.Total}</p>
                                 <p className="mt-1 text-sm text-gray-800">Status: {order.Status}</p>
                                 <p className="mt-1 text-sm text-gray-800">Creation Date: {order.Creation_Date}</p>
                                 <p className="mt-1 text-sm text-gray-800">Modified Date: {order.Modified_Date}</p>
-                                
-                                <div className="mt-4">
-                                    <h3 className="text-lg font-bold text-black">Items:</h3>
-                                    {order.Items.map(item => (
-                                        <div key={item.Product_Name} className="mt-2">
-                                            <p className="text-sm text-gray-800">{item.Product_Name}</p>
-                                            <p className="text-sm text-gray-800">Description: {item.Product_Description}</p>
-                                            <p className="text-sm text-gray-800">Quantity: {item.Quantity}</p>
-                                            <p className="text-sm text-gray-800">Price: ${item.Price}</p>
-                                        </div>
-                                    ))}
-                                </div>
+                                <button
+                                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    onClick={() => showDetails(order.Order_ID)}
+                                >
+                                    Show Details
+                                </button>
                             </div>
                         ))}
                     </div>
-
                     <div className="mt-4">
                                     <button
                                         className="inline-block rounded bg-pink-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-700 focus:outline-none focus:ring focus:ring-yellow-400"
@@ -124,6 +128,12 @@ export default function Orders() {
                     </div>
                 </div>
             </section>
+            {selectedOrderDetails && (
+                <OrderDetailsModal
+                    order={orders.find(order => order.Order_ID === selectedOrderDetails)}
+                    onClose={closeModal}
+                />
+            )}
         </>
     );
 }
