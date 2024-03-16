@@ -316,7 +316,8 @@ def get_product_by_category(category):
                 'Product_Description', p.Description,
                 'Product_Brand', b.Name,
                 'Product_Price', pii.Price,
-                'Product_Image', pi.Image
+                'Product_Image', pi.Image,
+                'Product_Alt', pi.ALT
             )
         ) AS Products
         FROM Product p
@@ -365,7 +366,8 @@ def get_cart_items():
                 'Quantity', ci.Quantity,
                 'Price', pi.Price,
                 'MaxQuantity', pi.Quantity,
-                'Product_Image', pimg.Image
+                'Product_Image', pimg.Image,
+                'Product_Alt', pimg.ALT
             )
         ) AS Products
         FROM Cart_Item ci
