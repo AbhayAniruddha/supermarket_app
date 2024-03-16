@@ -549,6 +549,21 @@ def move_to_previous_order():
             WHERE User_Id = %s
         ''', (user_id,))
 
+        # Keep only the latest three previous orders for the user
+        cur.execute('''
+            DELETE FROM PreviousOrder
+            WHERE User_Id = %s AND id NOT IN (
+                SELECT id
+                FROM (
+                    SELECT id
+                    FROM PreviousOrder
+                    WHERE User_Id = %s
+                    ORDER BY Creation_Date DESC
+                    LIMIT 6
+                ) AS temp
+            )
+        ''', (user_id, user_id))
+
         mysql.connection.commit()
         return jsonify({'message': 'Cart items moved to previous order successfully'})
     except Exception as e:
