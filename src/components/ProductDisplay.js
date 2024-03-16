@@ -61,7 +61,7 @@ export default function ProductDisplay() {
                         <div className=' flex flex-wrap gap-8'>
                             {products.map((product, idx) => {
                                 return (
-                                    <div className="mt-8" id={`${product.Product_Id}`}>
+                                    <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3" id={`${product.Product_Id}`}>
                                         <div class="group relative block overflow-hidden max-w-64">
                                             
                                             <img

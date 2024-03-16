@@ -1,10 +1,12 @@
 import Header from "./common/Header"
 import { useState,useEffect } from "react";
 import { auth } from "../firebase/firebase";
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { useNavigate } from "react-router-dom";
 
 export default function Cart(){
     const navigate = useNavigate();
+    const [user, loading, error] = useAuthState(auth);
     const [items,setItems] = useState([])
     const [quantity,setQuantity]= useState();
     const [address,setAddress] = useState([]);
@@ -29,7 +31,7 @@ export default function Cart(){
                   'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                  email: auth.currentUser.email
+                  email: user.email
                   })
               });
 
@@ -47,7 +49,7 @@ export default function Cart(){
       }
 
       fetchCart();
-    }, [forceRerender]);
+    }, [forceRerender,user]);
     useEffect(()=>{
         //fetch data from db
         const fetchInfo = async()=> {
@@ -61,7 +63,7 @@ export default function Cart(){
                 'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                email: auth.currentUser.email
+                email: user.email
                 })
             });
 
@@ -92,7 +94,7 @@ export default function Cart(){
                 'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                email: auth.currentUser.email,
+                email: user.email,
                 quantity: newQuantity,
                 name: Pname
                 })
@@ -122,7 +124,7 @@ export default function Cart(){
                 'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                email: auth.currentUser.email,
+                email: user.email,
                 quantity: newQuantity,
                 name: Pname
                 })
@@ -150,7 +152,7 @@ export default function Cart(){
                 'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                email: auth.currentUser.email,
+                email: user.email,
                 name: pname
                 })
             });
@@ -190,7 +192,7 @@ export default function Cart(){
                     'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                    user_id: auth.currentUser.email,
+                    user_id: user.email,
                     address_id:selectedAddress
                     })
                 });

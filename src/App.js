@@ -7,7 +7,7 @@ function App() {
   return (
     <>
       <Header />
-      <section className="bg-gray-900 text-white min-h-screen">
+      <section className="bg-white text-black min-h-screen">
         <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
           <div className="mx-auto max-w-lg text-center">
             <h2 className="text-3xl font-bold sm:text-4xl">Kickstart your marketing</h2>
@@ -22,7 +22,7 @@ function App() {
             {categories.map((category,idx)=>{
               return(
             <Link
-              className="block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10"
+              className="block rounded-xl border border-gray-200 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-teal-600/30"
               to={`/products/${category.Category}`}
               id={`${category.Category_ID}`}
             >
@@ -45,9 +45,9 @@ function App() {
                 />
               </svg>
 
-              <h2 className="mt-4 text-xl font-bold text-white">{category.Category}</h2>
+              <h2 className="mt-4 text-xl font-bold text-black">{category.Category}</h2>
 
-              <p className="mt-1 text-sm text-gray-300">
+              <p className="mt-1 text-sm text-gray-800">
                 {category.Category_Description}
               </p>
             </Link>);

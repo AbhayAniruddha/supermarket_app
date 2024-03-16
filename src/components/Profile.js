@@ -1,11 +1,12 @@
 import Header from "./common/Header"
 import { useState,useEffect } from "react";
 import { auth } from "../firebase/firebase";
-
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 
 export default function Profile(){
 
+    const [user, loading, error] = useAuthState(auth);
     const [info,setInfo] = useState([]);
     const [address,setAddress] = useState([]);
     const [text, setText] = useState('');
@@ -21,7 +22,7 @@ export default function Profile(){
                     'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                    email: auth.currentUser.email,
+                    email: user.email,
                     address: text,
                     postal_code: pc
                     })
@@ -61,7 +62,7 @@ export default function Profile(){
                   'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                  email: auth.currentUser.email
+                  email: user.email
                   })
               });
 
@@ -85,7 +86,7 @@ export default function Profile(){
                 'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                email: auth.currentUser.email
+                email: user.email
                 })
             });
 
@@ -103,16 +104,17 @@ export default function Profile(){
       }
 
       fetchInfo();
-    }, []);
+    }, [user]);
 
     return(
         <>
             <Header/>
-            <div className="flex flex-col items-start">
-                <div className="text-3xl">Profile</div>
+            <div className="flex flex-row items-start ml-10 sm:ml-[100px] mt-10 sm:mt-20 mr-10 sm:mr-0 flex-wrap">
+                <div className="flex flex-col grow">
+                <div className="text-5xl mb-3 font-bold">Profile</div>
                 {info!==null && info.length>0 && (
                 <>
-                <div className="flow-root w-1/2">
+                <div className="flow-root w-full pr-0 sm:pr-20">
                     <dl className="-my-3 divide-y divide-gray-100 text-sm">
                         <div className="grid grid-cols-1 gap-1 py-3 even:bg-gray-50 sm:grid-cols-3 sm:gap-4">
                         <dt className="font-medium text-gray-900">First Name</dt>
@@ -135,8 +137,8 @@ export default function Profile(){
                         </div>
                     </dl>
                 </div>
-                <div className="text-3xl mb-4">Addresses</div>
-                <div className="flow-root w-1/2">
+                <div className="text-4xl mt-20 mb-10 font-semibold">Addresses</div>
+                <div className="flow-root w-full pr-0 sm:pr-20">
                     <dl className="-my-3 divide-y divide-gray-100 text-sm"></dl>
                     {address ? (
                             address.map((addr, index) => (
@@ -154,35 +156,39 @@ export default function Profile(){
                 </>
 
                 )}
-                <div className="text-3xl">Add Delivery Address</div>
-                <div>
-                    <label htmlFor="Address" className="block text-xs font-medium text-gray-700"> Address </label>
-                    <textarea
-                        value={text}
-                        onChange={handleAddressChange}
-                        rows = "3"
-                        id="Address"
-                        placeholder="xyz street, abc apartment"
-                        className="mt-1 w-full rounded-md border-solid border-gray-600 shadow-sm sm:text-sm"
-                    />
                 </div>
-                <div>
-                    <label htmlFor="PostalCode" className="block text-xs font-medium text-gray-700"> Postal Code </label>
-                    <textarea
-                        value={pc}
-                        onChange={handlePostalCodeChange}
-                        rows = "1"
-                        id="PostalCode"
-                        placeholder=""
-                        className="mt-1 w-full rounded-md border-solid border-gray-600 shadow-sm sm:text-sm"
-                    />
+                
+                <div className="flex flex-col items-start w-full sm:w-1/2 pl-0 sm:pl-[10%]">
+                    <div className="text-3xl my-10 font-semibold">Add Delivery Address</div>
+                    <div>
+                        <label htmlFor="Address" className="block text-xs font-medium text-gray-700"> Address </label>
+                        <textarea
+                            value={text}
+                            onChange={handleAddressChange}
+                            rows = "3"
+                            id="Address"
+                            placeholder="xyz street, abc apartment"
+                            className="mt-1 w-[300px] rounded-md border-solid border-gray-600 shadow-sm sm:text-sm"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="PostalCode" className="block text-xs font-medium text-gray-700 mt-3"> Postal Code </label>
+                        <textarea
+                            value={pc}
+                            onChange={handlePostalCodeChange}
+                            rows = "1"
+                            id="PostalCode"
+                            placeholder=""
+                            className="mt-1 w-full rounded-md border-solid border-gray-600 shadow-sm sm:text-sm"
+                        />
+                    </div>
+                    <button
+                    onClick={handleButtonClick}
+                    className="block rounded-md bg-gray-900 mt-4 px-5 py-2.5 mb-20 text-sm font-medium text-white transition hover:bg-teal-500"
+                    >
+                    Add
+                    </button>
                 </div>
-                <button
-                onClick={handleButtonClick}
-                className="block rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-teal-500"
-                >
-                Add
-                </button>
 
             </div>
 
