@@ -9,6 +9,7 @@ export default function Orders() {
     const [user, loading, error] = useAuthState(auth);
     const [selectedOrder, setSelectedOrder] = useState(null); // State to track selected order
     const [selectedOrderDetails, setSelectedOrderDetails] = useState(null); // State to track selected order
+    const [message, setMessage] = useState(null); 
     
     const selectOrder = (orderIndex) => {
         //console.log(orderIndex)
@@ -73,7 +74,16 @@ export default function Orders() {
                 });
     
                 if (response.ok) {
-                    alert('Items moved to cart successfully');
+                    const data = await response.json();
+                    if (data.error) {
+                        // Display alert for failed items
+                        setMessage(`${data.error}`);
+                        
+                    } else {
+                        // Display success message
+                        setMessage('Items from previous order added to cart successfully');
+                        
+                    }
                     // Optionally, you can update the UI to reflect changes
                 } else {
                     console.error('Failed to move items to cart:', response.status);
@@ -96,7 +106,9 @@ export default function Orders() {
                     <div className="mx-auto max-w-lg text-center">
                         <h2 className="text-3xl font-bold sm:text-4xl">Order List</h2>
                     </div>
-
+                    {message && (
+                        <div className="bg-yellow-200 p-4 text-yellow-800 text-center">{message}</div>
+                    )}
                     <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                         {orders && orders.map(order => (
                             <div key={order.Order_ID} 
