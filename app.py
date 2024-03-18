@@ -661,11 +661,28 @@ def move_to_cart():
             INSERT INTO Cart_Item (Quantity, Linked_Product_Id, Linked_Cart_Session_Id)
             SELECT oi.Quantity, oi.Linked_Product_Id, %s
             FROM Order_Item oi
-            WHERE oi.Linked_Order_Id = %s
+            INNER JOIN Product_Inventory pi ON oi.Linked_Product_Id = pi.Linked_Product_Id
+            WHERE oi.Linked_Order_Id = %s AND pi.Quantity >= oi.Quantity
         ''', (cart_session_id, order_id))
 
         mysql.connection.commit()
-        return jsonify({'message': 'Items from previous order added to cart successfully'})
+        
+        # Check if any items couldn't be added to cart due to being out of stock
+        cur.execute('''
+            SELECT oi.Linked_Product_Id, p.Name
+            FROM Order_Item oi
+            INNER JOIN Product p ON oi.Linked_Product_Id = p.id
+            LEFT JOIN Product_Inventory pi ON oi.Linked_Product_Id = pi.Linked_Product_Id
+            WHERE oi.Linked_Order_Id = %s AND pi.Quantity < oi.Quantity
+        ''', (order_id,))
+        out_of_stock_items = cur.fetchall()
+
+        if out_of_stock_items:
+            failed_items = ', '.join([item[1] for item in out_of_stock_items])
+            message = f"The following items couldn't be added to cart because of insufficient stock: {failed_items}"
+            return jsonify({'error': message})
+        else:
+            return jsonify({'message': 'Items from previous order added to cart successfully'})
     except Exception as e:
         mysql.connection.rollback()
         return jsonify({'error': str(e)})
