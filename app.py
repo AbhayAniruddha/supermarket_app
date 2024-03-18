@@ -672,5 +672,19 @@ def move_to_cart():
     finally:
         cur.close()
 
+@app.route('/cart_total_items', methods=['POST'])
+def get_cart_total_items():
+
+    data = request.json
+    user_id = data.get('id')
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        SELECT GetCartTotalItems(%s)
+    ''', (user_id,))
+    total_items = cur.fetchone()[0]
+    cur.close()
+    
+    return jsonify({'total_items_in_cart': total_items}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
