@@ -458,7 +458,6 @@ def get_previous_orders():
                     'Shipping_Address_Id', po.Shipping_Address_Id,
                     'Status', po.Status,
                     'Creation_Date', po.Creation_Date,
-                    'Modified_Date', po.Modified_Date,
                     'Items', (
                         SELECT JSON_ARRAYAGG(
                             JSON_OBJECT(
